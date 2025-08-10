@@ -12,16 +12,23 @@
     .user { color: #00ffcc; }
     .bot { color: #fff; }
     .status { color: yellow; font-size: 0.9em; margin-top: 10px; }
+    button { background: #00ffcc; color: black; padding: 10px; margin-top: 20px; border: none; border-radius: 5px; cursor: pointer; }
   </style>
 </head>
 <body>
   <h1>ACE - Hands-Free Voice AI</h1>
   <div id="chat"></div>
-  <div id="status" class="status">Initializing...</div>
+  <div id="status" class="status">Click "Start" to begin</div>
+  <button id="startBtn">Start</button>
 
   <script>
     let recognition;
     let isSpeaking = false;
+
+    document.getElementById('startBtn').addEventListener('click', () => {
+      updateStatus("Listening...");
+      startListening();
+    });
 
     function addMessage(sender, text) {
       const chat = document.getElementById('chat');
@@ -66,8 +73,11 @@
     }
 
     function speakText(text) {
+      if (!text) return;
       isSpeaking = true;
       updateStatus("Speaking...");
+      speechSynthesis.cancel(); // stop any ongoing speech
+      console.log("Speaking:", text);
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'en-US';
       utterance.onend = () => {
@@ -83,7 +93,7 @@
       try {
         recognition.start();
       } catch (e) {
-        // recognition already started — ignore
+        // ignore "already started" errors
       }
     }
 
@@ -101,7 +111,7 @@
 
       recognition.onerror = (event) => {
         console.error('Speech recognition error', event.error);
-        updateStatus("Error — restarting listening...");
+        updateStatus("Error — restarting...");
         if (!isSpeaking) setTimeout(startListening, 1000);
       };
 
@@ -111,9 +121,6 @@
           startListening();
         }
       };
-
-      updateStatus("Listening...");
-      startListening();
     } else {
       alert('Speech recognition not supported. Use Chrome on desktop or Android.');
     }
