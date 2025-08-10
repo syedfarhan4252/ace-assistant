@@ -3,60 +3,92 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ACE - Assistant for Comprehensive Execution</title>
+  <title>SwearVerse AI Chat</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #111; color: white; text-align: center; padding: 20px; }
-    h1 { color: #00ffcc; }
-    #chat { max-width: 600px; margin: 20px auto; background: #222; padding: 20px; border-radius: 10px; }
-    .msg { text-align: left; margin: 10px 0; }
-    .user { color: #00ffcc; }
-    .bot { color: #fff; }
-    input, button {
-      padding: 10px; margin-top: 10px; width: 80%; border: none; border-radius: 5px;
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      margin: 0;
     }
-    button { width: auto; background: #00ffcc; color: black; cursor: pointer; }
+    h1 {
+      text-align: center;
+      padding: 1rem;
+      background: #222;
+      margin: 0;
+    }
+    #chat-box {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+    .user { color: #0f0; }
+    .bot { color: #0ff; }
+    form {
+      display: flex;
+      padding: 0.5rem;
+      background: #222;
+    }
+    input {
+      flex: 1;
+      padding: 0.5rem;
+      border: none;
+      outline: none;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      background: #0f0;
+      border: none;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-  <h1>ACE - Your AI Life Assistant</h1>
-  <div id="chat"></div>
-  <input type="text" id="userInput" placeholder="Type your message..." />
-  <button onclick="sendMessage()">Send</button>
+  <h1>SwearVerse AI Chat</h1>
+  <div id="chat-box"></div>
+  <form id="chat-form">
+    <input type="text" id="user-input" placeholder="Type your message..." required />
+    <button type="submit">Send</button>
+  </form>
 
   <script>
-    async function sendMessage() {
-      const input = document.getElementById('userInput');
-      const message = input.value.trim();
-      if (!message) return;
+    const chatBox = document.getElementById('chat-box');
+    const form = document.getElementById('chat-form');
+    const userInput = document.getElementById('user-input');
 
-      addMessage('user', message);
-      input.value = '';
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const message = userInput.value;
+      appendMessage('You', message, 'user');
+      userInput.value = '';
 
-      addMessage('bot', 'Thinking...');
+      appendMessage('Bot', 'Typing...', 'bot');
 
       try {
-        const res = await fetch('/api/chat', {
+        const res = await fetch('https://your-vercel-project-name.vercel.app/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message })
         });
-
         const data = await res.json();
-        const botMsgs = document.querySelectorAll('.bot');
-        botMsgs[botMsgs.length - 1].textContent = 'ACE: ' + (data.reply || 'No response');
-      } catch (err) {
-        const botMsgs = document.querySelectorAll('.bot');
-        botMsgs[botMsgs.length - 1].textContent = 'Error: ' + err.message;
-      }
-    }
 
-    function addMessage(sender, text) {
-      const chat = document.getElementById('chat');
-      const div = document.createElement('div');
-      div.className = 'msg ' + sender;
-      div.textContent = (sender === 'user' ? 'You: ' : 'ACE: ') + text;
-      chat.appendChild(div);
-      chat.scrollTop = chat.scrollHeight;
+        chatBox.lastChild.remove(); // Remove "Typing..."
+        appendMessage('Bot', data.reply, 'bot');
+      } catch (err) {
+        chatBox.lastChild.remove();
+        appendMessage('Bot', 'Error: Could not reach the server.', 'bot');
+      }
+    });
+
+    function appendMessage(sender, text, className) {
+      const msg = document.createElement('div');
+      msg.className = className;
+      msg.textContent = `${sender}: ${text}`;
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
     }
   </script>
 </body>
