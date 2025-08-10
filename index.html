@@ -76,15 +76,26 @@
       if (!text) return;
       isSpeaking = true;
       updateStatus("Speaking...");
-      speechSynthesis.cancel(); // stop any ongoing speech
+
+      // Stop recognition while speaking
+      if (recognition) recognition.stop();
+
+      speechSynthesis.cancel(); // Clear queue
       console.log("Speaking:", text);
+
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'en-US';
+
       utterance.onend = () => {
         isSpeaking = false;
-        updateStatus("Listening...");
-        startListening();
+        updateStatus("Waiting before listening...");
+        // Wait 2 seconds before listening again
+        setTimeout(() => {
+          updateStatus("Listening...");
+          startListening();
+        }, 2000);
       };
+
       speechSynthesis.speak(utterance);
     }
 
