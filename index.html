@@ -40,10 +40,13 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message })
         });
+
         const data = await res.json();
-        document.querySelectorAll('.bot').slice(-1)[0].textContent = 'ACE: ' + (data.reply || 'No response');
+        const botMsgs = document.querySelectorAll('.bot');
+        botMsgs[botMsgs.length - 1].textContent = 'ACE: ' + (data.reply || 'No response');
       } catch (err) {
-        document.querySelectorAll('.bot').slice(-1)[0].textContent = 'Error: ' + err.message;
+        const botMsgs = document.querySelectorAll('.bot');
+        botMsgs[botMsgs.length - 1].textContent = 'Error: ' + err.message;
       }
     }
 
