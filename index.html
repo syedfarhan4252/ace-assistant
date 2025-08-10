@@ -1,356 +1,60 @@
-<!--
-ACE — Assistant for Comprehensive Execution (Single-file Site)
-Brand: ACE
-Domain: syedVerse.in
-
-HOW TO USE:
-1) This is a single-file `index.html` (HTML + CSS + JS). No build tools required — perfect for uploading from a phone.
-2) To enable live AI, replace the callAiApi() function with a secure server endpoint on Vercel (recommended) that calls OpenAI or any other LLM. Do not put secret keys in client-side code.
-3) Weather uses Open-Meteo (no API key). For better accuracy, map city names carefully.
-4) Upload steps are provided in the companion README in the canvas.
-
-SECURITY NOTE:
-- NEVER embed private API keys in this file. Use serverless functions (Vercel) as a proxy for AI requests.
-
-BRANDING & THEME:
-- Brand name shown on the site: ACE
-- Domain shown on the site: syedVerse.in
-- Dark, premium mobile-first theme
---><!doctype html>
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ACE — Assistant for Comprehensive Execution</title>
-  <meta name="description" content="ACE — Your personal AI life assistant: chat, notes, quick tools, weather. Mobile-first single-file site for syedVerse.in" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ACE - Assistant for Comprehensive Execution</title>
   <style>
-    :root{--bg:#070812;--card:#0b1220;--accent:#06b6d4;--accent2:#7c3aed;--muted:#94a3b8;--glass:rgba(255,255,255,0.03)}
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial}
-    body{background:linear-gradient(180deg,#03040a 0%, #071029 60%);color:#e6eef8;padding:18px}
-    .wrap{max-width:980px;margin:0 auto}
-    header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
-    .logo{display:flex;flex-direction:column}
-    .brand{font-weight:800;font-size:20px;color:var(--accent)}
-    .tag{font-size:12px;color:var(--muted)}.grid{display:grid;grid-template-columns:1fr;gap:14px}
-@media(min-width:900px){.grid{grid-template-columns:2fr 1fr}}
-
-.card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:14px;padding:14px;box-shadow:0 8px 30px rgba(2,6,23,0.7);border:1px solid rgba(255,255,255,0.03)}
-.small{font-size:13px;color:var(--muted)}
-
-/* Chat styles */
-.chatWrap{display:flex;flex-direction:column;height:460px}
-.msgs{flex:1;overflow:auto;padding:8px;display:flex;flex-direction:column;gap:10px}
-.msg{max-width:86%;padding:12px;border-radius:12px;white-space:pre-wrap}
-.msg.me{margin-left:auto;background:linear-gradient(90deg,#042f3a,#034751);border:1px solid rgba(255,255,255,0.02)}
-.msg.ai{background:linear-gradient(90deg,#081028,#0b1530);border:1px solid rgba(255,255,255,0.03)}
-.msgTime{font-size:11px;color:var(--muted);margin-top:6px}
-
-.controls{display:flex;gap:8px;margin-top:8px}
-.input{flex:1;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
-.btn{background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;padding:10px 12px;border-radius:12px;color:white}
-
-/* Right column */
-.tools{display:flex;flex-direction:column;gap:12px}
-.toolRow{display:flex;gap:8px}
-.toolBtn{flex:1;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);text-align:center}
-
-/* Notes & Todos */
-.list{max-height:180px;overflow:auto;margin-top:8px;display:flex;flex-direction:column;gap:8px}
-.item{padding:10px;border-radius:10px;background:var(--glass);display:flex;justify-content:space-between;align-items:center}
-.muted{color:var(--muted)}
-
-footer{text-align:center;color:var(--muted);font-size:13px;margin-top:18px}
-
-.pill{padding:6px 8px;border-radius:999px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);font-size:13px}
-
-/* small responsiveness tweaks */
-@media(max-width:420px){ .chatWrap{height:360px} .brand{font-size:18px} }
-
+    body { font-family: Arial, sans-serif; background: #111; color: white; text-align: center; padding: 20px; }
+    h1 { color: #00ffcc; }
+    #chat { max-width: 600px; margin: 20px auto; background: #222; padding: 20px; border-radius: 10px; }
+    .msg { text-align: left; margin: 10px 0; }
+    .user { color: #00ffcc; }
+    .bot { color: #fff; }
+    input, button {
+      padding: 10px; margin-top: 10px; width: 80%; border: none; border-radius: 5px;
+    }
+    button { width: auto; background: #00ffcc; color: black; cursor: pointer; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="logo">
-        <div class="brand" id="brandName">ACE</div>
-        <div class="tag">Assistant for Comprehensive Execution</div>
-      </div>
-      <div style="margin-left:auto;text-align:right">
-        <div class="pill" id="domainPlaceholder">syedVerse.in</div>
-        <div class="small" style="margin-top:6px">Mobile-first • Fast • Private</div>
-      </div>
-    </header><main class="grid">
-  <section class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-      <div>
-        <div style="font-weight:800;font-size:15px">Chat with ACE</div>
-        <div class="small">AI help for your day: plans, emails, quick recipes, summaries, and more.</div>
-      </div>
-      <div class="small">Signed in as <strong id="userName">Guest</strong></div>
-    </div>
+  <h1>ACE - Your AI Life Assistant</h1>
+  <div id="chat"></div>
+  <input type="text" id="userInput" placeholder="Type your message..." />
+  <button onclick="sendMessage()">Send</button>
 
-    <div class="chatWrap" style="margin-top:12px">
-      <div class="msgs" id="messages"></div>
-      <div class="controls">
-        <input id="aiInput" class="input" placeholder="Ask ACE — e.g. 'Plan my day'" />
-        <button id="sendBtn" class="btn">Send</button>
-      </div>
-    </div>
+  <script>
+    async function sendMessage() {
+      const input = document.getElementById('userInput');
+      const message = input.value.trim();
+      if (!message) return;
 
-    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-      <button class="toolBtn" data-action="write_note">Write note</button>
-      <button class="toolBtn" data-action="plan_day">Plan my day</button>
-      <button class="toolBtn" data-action="quick_recipe">Quick recipe</button>
-      <button class="toolBtn" data-action="summarize">Summarize text</button>
-    </div>
-  </section>
+      addMessage('user', message);
+      input.value = '';
 
-  <aside class="tools">
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="font-weight:700">Quick tools</div>
-        <div class="small">Use instantly</div>
-      </div>
+      addMessage('bot', 'Thinking...');
 
-      <div style="margin-top:10px" class="toolRow">
-        <input id="calcInput" class="input" placeholder="Calculator (e.g. (12+3)*2)" />
-        <button id="calcBtn" class="btn">Calc</button>
-      </div>
-
-      <div style="margin-top:10px" class="toolRow">
-        <input id="unitInput" class="input" placeholder="Value" />
-        <select id="unitSel" style="border-radius:10px;padding:10px;background:transparent;color:inherit;border:1px solid rgba(255,255,255,0.04)">
-          <option value="kg_to_lbs">kg → lbs</option>
-          <option value="lbs_to_kg">lbs → kg</option>
-        </select>
-        <button id="unitBtn" class="btn">Convert</button>
-      </div>
-
-      <div style="margin-top:10px">
-        <div class="small">Weather for city</div>
-        <div style="display:flex;gap:8px;margin-top:6px">
-          <input id="cityInput" class="input" placeholder="e.g. Mumbai" />
-          <button id="cityBtn" class="btn">Get</button>
-        </div>
-        <div id="weatherBox" style="margin-top:8px" class="small muted">No weather loaded</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div style="font-weight:700">Notes & To‑Do</div>
-      <div style="margin-top:8px;display:flex;gap:8px">
-        <input id="noteInput" class="input" placeholder="New note or todo" />
-        <button id="addNoteBtn" class="btn">Add</button>
-      </div>
-      <div class="list" id="notesList"></div>
-    </div>
-
-    <div class="card">
-      <div style="font-weight:700">Profile & Settings</div>
-      <div style="margin-top:8px" class="small">Name</div>
-      <input id="nameInput" class="input" placeholder="Your name" />
-      <div style="margin-top:8px" class="small">Domain (for branding)</div>
-      <input id="domainInput" class="input" placeholder="syedVerse.in" />
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <button id="saveProfile" class="btn">Save</button>
-        <button id="resetProfile" class="toolBtn">Reset</button>
-      </div>
-      <div class="small muted" style="margin-top:8px">Profile saved locally on your phone browser.</div>
-    </div>
-  </aside>
-
-</main>
-
-<footer>
-  <div>ACE • Assistant for Comprehensive Execution — syedVerse.in</div>
-</footer>
-
-  </div>  <script>
-    /***** Branding defaults *****/
-    const brandName = 'ACE';
-    const domainPlaceholder = 'syedVerse.in';
-
-    // UI nodes
-    const messagesNode = document.getElementById('messages');
-    const aiInput = document.getElementById('aiInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const userNameNode = document.getElementById('userName');
-    const brandNode = document.getElementById('brandName');
-    const domainNode = document.getElementById('domainPlaceholder');
-
-    // other nodes
-    const calcInput = document.getElementById('calcInput');
-    const calcBtn = document.getElementById('calcBtn');
-    const unitInput = document.getElementById('unitInput');
-    const unitSel = document.getElementById('unitSel');
-    const unitBtn = document.getElementById('unitBtn');
-    const cityInput = document.getElementById('cityInput');
-    const cityBtn = document.getElementById('cityBtn');
-    const weatherBox = document.getElementById('weatherBox');
-
-    const noteInput = document.getElementById('noteInput');
-    const addNoteBtn = document.getElementById('addNoteBtn');
-    const notesList = document.getElementById('notesList');
-
-    const nameInput = document.getElementById('nameInput');
-    const domainInput = document.getElementById('domainInput');
-    const saveProfile = document.getElementById('saveProfile');
-    const resetProfile = document.getElementById('resetProfile');
-
-    // quick tool buttons
-    document.querySelectorAll('[data-action]').forEach(btn => btn.addEventListener('click', e => quickAction(e.target.dataset.action)));
-
-    // simple storage helpers
-    const store = {
-      get(k, def) { try { const v = localStorage.getItem('ace_' + k); return v ? JSON.parse(v) : def; } catch(e){return def} },
-      set(k,v){ localStorage.setItem('ace_' + k, JSON.stringify(v)); }
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message })
+        });
+        const data = await res.json();
+        document.querySelectorAll('.bot').slice(-1)[0].textContent = 'ACE: ' + (data.reply || 'No response');
+      } catch (err) {
+        document.querySelectorAll('.bot').slice(-1)[0].textContent = 'Error: ' + err.message;
+      }
     }
 
-    // init
-    function init(){
-      brandNode.textContent = store.get('brand', brandName) || brandName;
-      domainNode.textContent = store.get('domain', domainPlaceholder) || domainPlaceholder;
-      const profile = store.get('profile', {name:'Guest'});
-      userNameNode.textContent = profile.name || 'Guest';
-      nameInput.value = profile.name || '';
-      domainInput.value = store.get('domain', '') || '';
-
-      // load messages
-      const msgs = store.get('msgs', [{who:'ai',text:`Hello ${profile.name || 'Guest'}! I'm ACE — your assistant. Ask me anything.`,time: new Date().toLocaleString()}]);
-      msgs.forEach(m => appendMsg(m.who, m.text, m.time));
-
-      // load notes
-      renderNotes();
-    }
-
-    function appendMsg(who, text, time){
+    function addMessage(sender, text) {
+      const chat = document.getElementById('chat');
       const div = document.createElement('div');
-      div.className = 'msg ' + (who === 'me' ? 'me' : 'ai');
-      div.innerHTML = `<div>${escapeHtml(text)}</div><div class="msgTime">${time || new Date().toLocaleString()}</div>`;
-      messagesNode.appendChild(div);
-      messagesNode.scrollTop = messagesNode.scrollHeight;
+      div.className = 'msg ' + sender;
+      div.textContent = (sender === 'user' ? 'You: ' : 'ACE: ') + text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
     }
-
-    function saveMsgList(){
-      const nodes = Array.from(messagesNode.querySelectorAll('.msg')).map(n => ({who: n.classList.contains('me') ? 'me' : 'ai', text: n.childNodes[0].innerText, time: n.querySelector('.msgTime')?.innerText}));
-      store.set('msgs', nodes);
-    }
-
-    // send to AI (placeholder)
-    async function callAiApi(prompt){
-      // IMPORTANT: For production do NOT call OpenAI directly from client with a secret key.
-      // Recommended: Deploy a tiny serverless function on Vercel (e.g. /api/ai) that calls OpenAI and returns the reply.
-
-      // Demo: canned response + delay
-      await new Promise(r => setTimeout(r, 700));
-      return `ACE: I understood: "${prompt}"
-
-(Replace callAiApi with your server call for live AI.)`;
-    }
-
-    async function sendPrompt(prompt){
-      if(!prompt || !prompt.trim()) return;
-      appendMsg('me', prompt);
-      saveMsgList();
-      aiInput.value = '';
-      appendMsg('ai', 'Thinking...');
-      const reply = await callAiApi(prompt);
-      // replace the last 'Thinking...' message text
-      const last = messagesNode.querySelectorAll('.msg.ai');
-      if(last.length) last[last.length-1].childNodes[0].innerText = reply;
-      saveMsgList();
-    }
-
-    // quick actions mapping
-    function quickAction(action){
-      const mapping={
-        write_note: 'Write a short friendly message to a friend about meeting at 6pm.',
-        plan_day: 'Plan an efficient day for someone who works 9-5 and studies in the evening.',
-        quick_recipe: 'Give a 15-minute recipe using eggs, rice, and tomatoes.',
-        summarize: 'Summarize: Today I have to finish thesis, send invoice, and buy groceries.'
-      };
-      const p = mapping[action];
-      sendPrompt(p);
-    }
-
-    // calculator
-    calcBtn.addEventListener('click', ()=>{
-      const expr = calcInput.value;
-      try{ const res = eval(expr); alert('Result: ' + res); }catch(e){alert('Invalid expression')}
-    });
-
-    // unit convert
-    unitBtn.addEventListener('click', ()=>{
-      const v = parseFloat(unitInput.value);
-      if(isNaN(v)){alert('Enter a number');return}
-      const t = unitSel.value;
-      let res='';
-      if(t==='kg_to_lbs') res = (v*2.2046226218).toFixed(2) + ' lbs';
-      if(t==='lbs_to_kg') res = (v/2.2046226218).toFixed(2) + ' kg';
-      alert('Result: ' + res);
-    });
-
-    // weather via open-meteo (free, no key) - uses city -> simple lookup with geocoding API
-    async function fetchWeatherForCity(city){
-      weatherBox.textContent = 'Loading weather for ' + city + '...';
-      try{
-        const g = await fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(city));
-        const gj = await g.json();
-        if(!gj.results || !gj.results.length){ weatherBox.textContent = 'City not found.'; return }
-        const loc = gj.results[0];
-        const lat = loc.latitude, lon = loc.longitude;
-        const w = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=auto`);
-        const wj = await w.json();
-        if(wj.current_weather){
-          weatherBox.innerHTML = `<div><strong>${loc.name}, ${loc.country}</strong></div><div class=\"small\">${wj.current_weather.temperature}°C • Wind ${wj.current_weather.windspeed} km/h</div>`;
-        }else{
-          weatherBox.textContent = 'Weather not available.';
-        }
-      }catch(e){ weatherBox.textContent = 'Weather failed.' }
-    }
-
-    cityBtn.addEventListener('click', ()=>{
-      const c = cityInput.value.trim(); if(!c) return alert('Enter city'); fetchWeatherForCity(c);
-    });
-
-    // notes
-    function renderNotes(){
-      const notes = store.get('notes', []);
-      notesList.innerHTML='';
-      if(!notes.length) notesList.innerHTML='<div class="muted">No notes yet</div>';
-      notes.forEach((n,i)=>{
-        const d = document.createElement('div'); d.className='item';
-        d.innerHTML = `<div>${escapeHtml(n)}</div><div><button data-i='${i}' class='toolBtn'>Del</button></div>`;
-        notesList.appendChild(d);
-      });
-      notesList.querySelectorAll('button').forEach(b=>b.addEventListener('click', e => { const idx = +e.target.dataset.i; deleteNote(idx); }));
-    }
-
-    addNoteBtn.addEventListener('click', ()=>{ const v = noteInput.value.trim(); if(!v) return; const notes = store.get('notes', []); notes.unshift(v); store.set('notes', notes); noteInput.value=''; renderNotes(); });
-    function deleteNote(i){ const notes = store.get('notes', []); notes.splice(i,1); store.set('notes', notes); renderNotes(); }
-
-    // profile
-    saveProfile.addEventListener('click', ()=>{
-      const p = { name: nameInput.value || 'Guest' };
-      store.set('profile', p);
-      userNameNode.textContent = p.name;
-      if(domainInput.value) store.set('domain', domainInput.value);
-      domainNode.textContent = store.get('domain') || domainPlaceholder;
-      alert('Profile saved locally');
-    });
-    resetProfile.addEventListener('click', ()=>{ localStorage.clear(); location.reload(); });
-
-    // send actions
-    sendBtn.addEventListener('click', ()=> sendPrompt(aiInput.value));
-    aiInput.addEventListener('keydown', e => { if(e.key==='Enter') sendPrompt(aiInput.value); });
-
-    // helpers
-    function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-    // init
-    init();
-
-  </script></body>
+  </script>
+</body>
 </html>
